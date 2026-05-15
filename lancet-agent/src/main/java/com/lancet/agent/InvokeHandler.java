@@ -1,12 +1,9 @@
 package com.lancet.agent;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.TypeAdapter;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
 import com.lancet.agent.adapter.FrameworkAdapter;
+import com.lancet.agent.dto.GsonFactory;
 import com.lancet.agent.dto.InvocationRequest;
 import com.lancet.agent.dto.InvocationResult;
 import com.sun.net.httpserver.HttpExchange;
@@ -20,13 +17,6 @@ import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
 
 /**
  * HTTP 调用处理器
@@ -34,7 +24,7 @@ import java.util.List;
 public class InvokeHandler implements HttpHandler {
 
     private final FrameworkAdapter adapter;
-    private final Gson gson = createGson();
+    private final Gson gson = GsonFactory.create();
 
     public InvokeHandler(FrameworkAdapter adapter) {
         this.adapter = adapter;
@@ -145,94 +135,6 @@ public class InvokeHandler implements HttpHandler {
         PrintWriter pw = new PrintWriter(sw);
         t.printStackTrace(pw);
         return sw.toString();
-    }
-
-    private static Gson createGson() {
-        GsonBuilder builder = new GsonBuilder();
-
-        // LocalDateTime 适配器：支持多种常见字符串格式
-        builder.registerTypeAdapter(LocalDateTime.class, new TypeAdapter<LocalDateTime>() {
-            private final List<DateTimeFormatter> formatters = Arrays.asList(
-                    DateTimeFormatter.ISO_LOCAL_DATE_TIME,
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"),
-                    DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
-            );
-
-            @Override
-            public void write(JsonWriter out, LocalDateTime value) throws IOException {
-                out.value(value.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-            }
-
-            @Override
-            public LocalDateTime read(JsonReader in) throws IOException {
-                String str = in.nextString();
-                for (DateTimeFormatter formatter : formatters) {
-                    try {
-                        return LocalDateTime.parse(str, formatter);
-                    } catch (DateTimeParseException e) {
-                        // try next formatter
-                    }
-                }
-                throw new IOException("Cannot parse LocalDateTime: " + str);
-            }
-        });
-
-        // LocalDate 适配器
-        builder.registerTypeAdapter(LocalDate.class, new TypeAdapter<LocalDate>() {
-            private final List<DateTimeFormatter> formatters = Arrays.asList(
-                    DateTimeFormatter.ISO_LOCAL_DATE,
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd"),
-                    DateTimeFormatter.ofPattern("yyyy/MM/dd")
-            );
-
-            @Override
-            public void write(JsonWriter out, LocalDate value) throws IOException {
-                out.value(value.format(DateTimeFormatter.ISO_LOCAL_DATE));
-            }
-
-            @Override
-            public LocalDate read(JsonReader in) throws IOException {
-                String str = in.nextString();
-                for (DateTimeFormatter formatter : formatters) {
-                    try {
-                        return LocalDate.parse(str, formatter);
-                    } catch (DateTimeParseException e) {
-                        // try next formatter
-                    }
-                }
-                throw new IOException("Cannot parse LocalDate: " + str);
-            }
-        });
-
-        // java.util.Date 适配器
-        builder.registerTypeAdapter(Date.class, new TypeAdapter<Date>() {
-            private final List<DateTimeFormatter> formatters = Arrays.asList(
-                    DateTimeFormatter.ISO_LOCAL_DATE_TIME,
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
-            );
-
-            @Override
-            public void write(JsonWriter out, Date value) throws IOException {
-                out.value(value.toInstant().toString());
-            }
-
-            @Override
-            public Date read(JsonReader in) throws IOException {
-                String str = in.nextString();
-                for (DateTimeFormatter formatter : formatters) {
-                    try {
-                        return java.sql.Timestamp.valueOf(LocalDateTime.parse(str, formatter));
-                    } catch (DateTimeParseException e) {
-                        // try next formatter
-                    }
-                }
-                throw new IOException("Cannot parse Date: " + str);
-            }
-        });
-
-        return builder.create();
     }
 
     private void sendResponse(HttpExchange exchange, int statusCode, String response) throws IOException {

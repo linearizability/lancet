@@ -1,6 +1,7 @@
 package com.lancet.client;
 
 import com.google.gson.Gson;
+import com.lancet.agent.dto.GsonFactory;
 import com.lancet.agent.dto.InvocationRequest;
 import com.lancet.agent.dto.InvocationResult;
 
@@ -13,7 +14,7 @@ import java.util.Arrays;
 public class LancetProxyFactory {
 
     private final String agentUrl;
-    private final Gson gson = new Gson();
+    private final Gson gson = GsonFactory.create();
 
     public LancetProxyFactory(String agentUrl) {
         if (agentUrl.endsWith("/")) {
