@@ -82,8 +82,9 @@ public class InvokeHandler implements HttpHandler {
                 paramTypes[i] = classForName(paramTypeNames[i]);
             }
 
-            // 定位方法
-            Method method = clazz.getMethod(request.getMethodName(), paramTypes);
+            // 定位方法（支持 private/protected/public，含继承方法）
+            Method method = findMethod(clazz, request.getMethodName(), paramTypes);
+            method.setAccessible(true);
 
             // 反序列化参数
             String[] paramsJson = request.getParamsJson();
@@ -135,6 +136,34 @@ public class InvokeHandler implements HttpHandler {
         PrintWriter pw = new PrintWriter(sw);
         t.printStackTrace(pw);
         return sw.toString();
+    }
+
+    /**
+     * 查找方法：先从当前类查找声明方法（含 private），再沿继承链向上查找
+     */
+    private Method findMethod(Class<?> clazz, String methodName, Class<?>[] paramTypes) throws NoSuchMethodException {
+        Class<?> current = clazz;
+        while (current != null) {
+            try {
+                return current.getDeclaredMethod(methodName, paramTypes);
+            } catch (NoSuchMethodException e) {
+                current = current.getSuperclass();
+            }
+        }
+        throw new NoSuchMethodException(clazz.getName() + "." + methodName + describeParamTypes(paramTypes));
+    }
+
+    private String describeParamTypes(Class<?>[] paramTypes) {
+        if (paramTypes == null || paramTypes.length == 0) {
+            return "()";
+        }
+        StringBuilder sb = new StringBuilder("(");
+        for (int i = 0; i < paramTypes.length; i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(paramTypes[i].getName());
+        }
+        sb.append(")");
+        return sb.toString();
     }
 
     private void sendResponse(HttpExchange exchange, int statusCode, String response) throws IOException {
