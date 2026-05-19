@@ -117,10 +117,28 @@ public class LancetProxyFactory {
      */
     @SuppressWarnings("unchecked")
     public <T> T invoke(String className, String methodName, Class<?>[] paramTypes, Object[] args, Class<T> returnType) {
+        return invoke(className, methodName, paramTypes, args, returnType, null);
+    }
+
+    /**
+     * 直接调用指定类的指定方法，带返回类型和实例来源。
+     *
+     * @param className      目标类全限定名
+     * @param methodName     方法名
+     * @param paramTypes     参数类型数组，无参传 null
+     * @param args           参数值数组，无参传 null
+     * @param returnType     返回值类型，传 null 则按 Object 解析
+     * @param instanceSource 实例来源，可选值：{@code null}/auto, new, topos, scene, classpath, registry
+     * @param <T>            返回值泛型
+     * @return 方法返回值，void 返回 null
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T invoke(String className, String methodName, Class<?>[] paramTypes, Object[] args, Class<T> returnType, String instanceSource) {
         // 1. 构造请求
         InvocationRequest req = new InvocationRequest();
         req.setClassName(className);
         req.setMethodName(methodName);
+        req.setInstanceSource(instanceSource);
         if (paramTypes != null) {
             req.setParamTypes(Arrays.stream(paramTypes)
                     .map(Class::getName)

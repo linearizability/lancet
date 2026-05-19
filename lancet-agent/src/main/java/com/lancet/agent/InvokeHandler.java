@@ -2,10 +2,12 @@ package com.lancet.agent;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.lancet.agent.adapter.FrameworkAdapter;
+import com.lancet.agent.adapter.GuiceAdapter;
+import com.lancet.agent.adapter.PlainAdapter;
 import com.lancet.agent.dto.GsonFactory;
 import com.lancet.agent.dto.InvocationRequest;
 import com.lancet.agent.dto.InvocationResult;
+import com.lancet.agent.util.ClassLoaderUtils;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
@@ -23,11 +25,11 @@ import java.nio.charset.StandardCharsets;
  */
 public class InvokeHandler implements HttpHandler {
 
-    private final FrameworkAdapter adapter;
     private final Gson gson = GsonFactory.create();
+    private final GuiceAdapter guiceAdapter = new GuiceAdapter();
+    private final PlainAdapter plainAdapter = new PlainAdapter();
 
-    public InvokeHandler(FrameworkAdapter adapter) {
-        this.adapter = adapter;
+    public InvokeHandler() {
     }
 
     @Override
@@ -66,11 +68,11 @@ public class InvokeHandler implements HttpHandler {
                 return InvocationResult.fail("Request body is null", System.currentTimeMillis() - start);
             }
 
-            // 加载目标类
-            Class<?> clazz = Class.forName(request.getClassName());
+            // 加载目标类（跨 ClassLoader 查找，兼容业务侧自定义/隔离 ClassLoader）
+            Class<?> clazz = ClassLoaderUtils.loadClass(request.getClassName());
 
-            // 获取实例
-            Object instance = adapter.getInstance(request.getClassName());
+            // 获取实例 — 根据 instanceSource 选择策略
+            Object instance = getInstance(request);
             if (instance == null) {
                 return InvocationResult.fail("Instance not found for class: " + request.getClassName(), System.currentTimeMillis() - start);
             }
@@ -118,6 +120,47 @@ public class InvokeHandler implements HttpHandler {
         }
     }
 
+    /**
+     * 根据 instanceSource 获取实例。
+     * <ul>
+     *   <li>{@code null} / {@code auto} — 自动检测（GuiceAdapter → PlainAdapter）</li>
+     *   <li>{@code new} — 反射创建新实例</li>
+     *   <li>{@code topos} — 仅使用 Topos.get()</li>
+     *   <li>{@code scene} — 仅扫描 JavaFX 场景图</li>
+     *   <li>{@code classpath} — 仅扫描已加载类的静态字段</li>
+     *   <li>{@code registry} — 使用已注册的实例</li>
+     * </ul>
+     */
+    private Object getInstance(InvocationRequest request) throws Exception {
+        String source = request.getInstanceSource();
+        if (source == null || source.isEmpty() || "auto".equals(source)) {
+            // 自动检测：先 Guice，再 Plain
+            try {
+                return guiceAdapter.getInstance(request.getClassName());
+            } catch (Exception e) {
+                return plainAdapter.getInstance(request.getClassName());
+            }
+        }
+        switch (source) {
+            case "new":
+                return newInstance(request.getClassName());
+            case "topos":
+                return guiceAdapter.getInstance(request.getClassName());
+            case "scene":
+            case "classpath":
+            case "registry":
+                return plainAdapter.getInstance(request.getClassName());
+            default:
+                return plainAdapter.getInstance(request.getClassName());
+        }
+    }
+
+    /** 直接反射创建新实例 */
+    private Object newInstance(String className) throws Exception {
+        Class<?> clazz = ClassLoaderUtils.loadClass(className);
+        return plainAdapter.getInstance(className);
+    }
+
     private Class<?> classForName(String name) throws ClassNotFoundException {
         if ("int".equals(name)) return int.class;
         if ("long".equals(name)) return long.class;
@@ -128,7 +171,7 @@ public class InvokeHandler implements HttpHandler {
         if ("float".equals(name)) return float.class;
         if ("double".equals(name)) return double.class;
         if ("void".equals(name)) return void.class;
-        return Class.forName(name);
+        return ClassLoaderUtils.loadClass(name);
     }
 
     private String stackTraceToString(Throwable t) {

@@ -1,34 +1,35 @@
 package com.lancet.agent.adapter;
 
+import com.lancet.agent.util.ClassLoaderUtils;
+
 /**
  * Guice / Topos 框架适配器
+ * <p>
+ * 获取实例的优先级：
+ * 1. Topos.get(Class) — 从 Guice 容器获取
+ * 2. 委托给 PlainAdapter — 继续 fallback
  */
 public class GuiceAdapter implements FrameworkAdapter {
 
+    private final PlainAdapter plainAdapter = new PlainAdapter();
+
     @Override
     public Object getInstance(String className) throws Exception {
-        Class<?> clazz = Class.forName(className);
+        Class<?> clazz = ClassLoaderUtils.loadClass(className);
 
-        // 优先尝试 Topos.get(Class)
+        // 1. 优先尝试 Topos.get(Class)
         try {
-            Class<?> topos = Class.forName("topos.store.framework.Topos");
+            Class<?> topos = ClassLoaderUtils.loadClass("topos.store.framework.Topos");
             Object framework = topos.getMethod("framework").invoke(null);
             if (framework != null) {
                 return topos.getMethod("get", Class.class).invoke(null, clazz);
             }
-        } catch (ClassNotFoundException | NoSuchMethodException e) {
-            // Topos 不存在，尝试 Guice Injector
+        } catch (Exception e) {
+            // Topos 获取失败（类不在 Guice 容器中），继续 fallback
         }
 
-        // 尝试从 Guice Injector 获取
-        try {
-            Class<?> guiceClass = Class.forName("com.google.inject.Guice");
-            //  Guice 没有全局 injector，通常存储在静态字段或需要通过其他方式获取
-            // 这里尝试从常见模式获取：查找类路径下持有 Injector 的类
-            throw new IllegalStateException("Guice Injector not found. Please use Topos or ensure a static Injector is accessible.");
-        } catch (ClassNotFoundException e) {
-            throw new IllegalStateException("Neither Topos nor Guice found in classpath");
-        }
+        // 2. 委托 PlainAdapter 继续尝试（INSTANCE 字段 + 遍历构造器）
+        return plainAdapter.getInstance(className);
     }
 
     @Override
@@ -38,11 +39,6 @@ public class GuiceAdapter implements FrameworkAdapter {
     }
 
     private boolean exists(String className) {
-        try {
-            Class.forName(className);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
+        return ClassLoaderUtils.loadClassOrNull(className) != null;
     }
 }

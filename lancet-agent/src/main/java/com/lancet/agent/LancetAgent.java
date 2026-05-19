@@ -12,26 +12,34 @@ import java.lang.instrument.Instrumentation;
  */
 public class LancetAgent {
 
+    private static volatile Instrumentation instrumentation;
+
+    public static Instrumentation getInstrumentation() {
+        return instrumentation;
+    }
+
     public static void premain(String agentArgs, Instrumentation inst) {
+        instrumentation = inst;
         // 1. 解析参数
         AgentConfig config = AgentConfig.parse(agentArgs);
         System.out.println("[lancet] Agent mounted, waiting for framework ready...");
 
         // 2. 启动守护线程
         new Thread(() -> {
-            FrameworkAdapter adapter = waitForFrameworkReady(config);
+            // 框架探测（仅输出日志，不再传递给 HTTP 服务）
+            detectFramework(config);
             // 3. 启动 HTTP 服务
-            new AgentHttpServer(config.getPort(), adapter).start();
+            new AgentHttpServer(config.getPort()).start();
         }, "lancet-init").start();
     }
 
-    private static FrameworkAdapter waitForFrameworkReady(AgentConfig config) {
+    private static void detectFramework(AgentConfig config) {
         // 如果用户显式指定了框架类型
         if (config.getFrameworkType() != null) {
             FrameworkAdapter adapter = createAdapter(config.getFrameworkType());
             if (adapter != null) {
                 System.out.println("[lancet] Framework '" + config.getFrameworkType() + "' specified by user.");
-                return adapter;
+                return;
             }
             System.err.println("[lancet] Specified framework '" + config.getFrameworkType() + "' not available, falling back to auto-detect.");
         }
@@ -47,7 +55,7 @@ public class LancetAgent {
             for (FrameworkAdapter adapter : adapters) {
                 if (adapter.isAvailable()) {
                     System.out.println("[lancet] Framework detected: " + adapter.getClass().getSimpleName());
-                    return adapter;
+                    return;
                 }
             }
             try {
