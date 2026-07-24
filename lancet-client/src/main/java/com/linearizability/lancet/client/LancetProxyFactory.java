@@ -1,9 +1,9 @@
-package com.lancet.client;
+package com.linearizability.lancet.client;
 
 import com.google.gson.Gson;
-import com.lancet.agent.dto.GsonFactory;
-import com.lancet.agent.dto.InvocationRequest;
-import com.lancet.agent.dto.InvocationResult;
+import com.linearizability.lancet.agent.dto.GsonFactory;
+import com.linearizability.lancet.agent.dto.InvocationRequest;
+import com.linearizability.lancet.agent.dto.InvocationResult;
 
 import java.lang.reflect.Proxy;
 import java.util.Arrays;

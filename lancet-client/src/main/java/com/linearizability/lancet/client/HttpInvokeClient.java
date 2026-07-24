@@ -1,8 +1,8 @@
-package com.lancet.client;
+package com.linearizability.lancet.client;
 
 import com.google.gson.Gson;
-import com.lancet.agent.dto.InvocationRequest;
-import com.lancet.agent.dto.InvocationResult;
+import com.linearizability.lancet.agent.dto.InvocationRequest;
+import com.linearizability.lancet.agent.dto.InvocationResult;
 
 import java.io.BufferedReader;
 import java.io.IOException;

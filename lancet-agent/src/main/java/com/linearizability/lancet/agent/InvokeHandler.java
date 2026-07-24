@@ -1,13 +1,13 @@
-package com.lancet.agent;
+package com.linearizability.lancet.agent;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.lancet.agent.adapter.GuiceAdapter;
-import com.lancet.agent.adapter.PlainAdapter;
-import com.lancet.agent.dto.GsonFactory;
-import com.lancet.agent.dto.InvocationRequest;
-import com.lancet.agent.dto.InvocationResult;
-import com.lancet.agent.util.ClassLoaderUtils;
+import com.linearizability.lancet.agent.adapter.GuiceAdapter;
+import com.linearizability.lancet.agent.adapter.PlainAdapter;
+import com.linearizability.lancet.agent.dto.GsonFactory;
+import com.linearizability.lancet.agent.dto.InvocationRequest;
+import com.linearizability.lancet.agent.dto.InvocationResult;
+import com.linearizability.lancet.agent.util.ClassLoaderUtils;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 

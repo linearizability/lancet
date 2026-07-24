@@ -1,4 +1,4 @@
-package com.lancet.agent.dto;
+package com.linearizability.lancet.agent.dto;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

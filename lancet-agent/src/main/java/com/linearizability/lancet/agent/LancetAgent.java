@@ -1,9 +1,9 @@
-package com.lancet.agent;
+package com.linearizability.lancet.agent;
 
-import com.lancet.agent.adapter.FrameworkAdapter;
-import com.lancet.agent.adapter.GuiceAdapter;
-import com.lancet.agent.adapter.PlainAdapter;
-import com.lancet.agent.adapter.SpringAdapter;
+import com.linearizability.lancet.agent.adapter.FrameworkAdapter;
+import com.linearizability.lancet.agent.adapter.GuiceAdapter;
+import com.linearizability.lancet.agent.adapter.PlainAdapter;
+import com.linearizability.lancet.agent.adapter.SpringAdapter;
 
 import java.lang.instrument.Instrumentation;
 

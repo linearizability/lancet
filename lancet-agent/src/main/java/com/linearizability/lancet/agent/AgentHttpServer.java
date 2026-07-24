@@ -1,4 +1,4 @@
-package com.lancet.agent;
+package com.linearizability.lancet.agent;
 
 import com.sun.net.httpserver.HttpServer;
 

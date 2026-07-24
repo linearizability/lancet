@@ -1,4 +1,4 @@
-package com.lancet.agent.dto;
+package com.linearizability.lancet.agent.dto;
 
 /**
  * 方法调用请求 DTO

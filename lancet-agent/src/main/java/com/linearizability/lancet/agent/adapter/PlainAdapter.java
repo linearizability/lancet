@@ -1,7 +1,7 @@
-package com.lancet.agent.adapter;
+package com.linearizability.lancet.agent.adapter;
 
-import com.lancet.agent.LancetAgent;
-import com.lancet.agent.util.ClassLoaderUtils;
+import com.linearizability.lancet.agent.LancetAgent;
+import com.linearizability.lancet.agent.util.ClassLoaderUtils;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;

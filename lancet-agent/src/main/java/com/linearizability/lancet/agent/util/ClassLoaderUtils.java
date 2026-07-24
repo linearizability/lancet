@@ -1,6 +1,6 @@
-package com.lancet.agent.util;
+package com.linearizability.lancet.agent.util;
 
-import com.lancet.agent.LancetAgent;
+import com.linearizability.lancet.agent.LancetAgent;
 
 import java.lang.instrument.Instrumentation;
 import java.util.HashSet;

@@ -1,4 +1,4 @@
-package com.lancet.agent;
+package com.linearizability.lancet.agent;
 
 /**
  * Agent 配置

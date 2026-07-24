@@ -1,6 +1,6 @@
-package com.lancet.agent.adapter;
+package com.linearizability.lancet.agent.adapter;
 
-import com.lancet.agent.util.ClassLoaderUtils;
+import com.linearizability.lancet.agent.util.ClassLoaderUtils;
 
 /**
  * Guice / Topos 框架适配器

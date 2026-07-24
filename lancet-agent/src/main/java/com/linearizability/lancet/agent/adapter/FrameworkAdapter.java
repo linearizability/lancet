@@ -1,4 +1,4 @@
-package com.lancet.agent.adapter;
+package com.linearizability.lancet.agent.adapter;
 
 /**
  * 框架适配器接口
