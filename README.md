@@ -163,7 +163,7 @@ Agent 启动时会自动探测目标 JVM 中的框架，探测顺序：**Spring 
 
 ---
 
-## 6. 日期时间类型支持
+## 6. 日期时间与特殊类型支持
 
 Agent 端的 Gson 已内置以下 Java 8 时间类型的反序列化支持：
 
@@ -172,8 +172,9 @@ Agent 端的 Gson 已内置以下 Java 8 时间类型的反序列化支持：
 | `LocalDateTime` | `2025-07-17T10:42:45`、`2025-07-17 10:42:45`、`2025-07-17 10:42:45.000` |
 | `LocalDate` | `2025-07-17`、`2025/07/17` |
 | `java.util.Date` | 同上 |
+| `java.nio.file.Path` | 按路径字符串传输，Agent 端用 `Paths.get()` 重建 |
 
-如果目标应用中的类使用了其他特殊类型（如自定义枚举、BigDecimal 特殊格式等），导致 Gson 反序列化失败，请修改 `InvokeHandler.createGson()` 添加对应的 `TypeAdapter`。
+如果目标应用中的类使用了其他特殊类型（如自定义枚举、BigDecimal 特殊格式等），导致 Gson 反序列化失败，请修改 `GsonFactory.create()` 添加对应的 `TypeAdapter`。
 
 ---
 

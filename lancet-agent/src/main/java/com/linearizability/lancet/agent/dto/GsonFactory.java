@@ -2,12 +2,21 @@ package com.linearizability.lancet.agent.dto;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -162,6 +171,23 @@ public class GsonFactory {
                     }
                 }
                 throw new IOException("Cannot parse Date: " + str);
+            }
+        });
+
+        // java.nio.file.Path：接口无法实例化，序列化为路径字符串，反序列化用 Paths.get 重建。
+        // 必须按类层次结构注册（registerTypeHierarchyAdapter）：运行时实际类型是
+        // sun.nio.fs.WindowsPath 等实现类，若只按 Path.class 精确注册，顶层参数序列化
+        // 仍会落到 Gson 默认的反射序列化，在 JDK 9+ 上因模块封装直接失败。
+        builder.registerTypeHierarchyAdapter(Path.class, new JsonSerializer<Path>() {
+            @Override
+            public JsonElement serialize(Path src, Type typeOfSrc, JsonSerializationContext context) {
+                return new JsonPrimitive(src.toString());
+            }
+        });
+        builder.registerTypeHierarchyAdapter(Path.class, new JsonDeserializer<Path>() {
+            @Override
+            public Path deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
+                return Paths.get(json.getAsString());
             }
         });
 
